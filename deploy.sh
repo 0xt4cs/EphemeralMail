@@ -39,7 +39,7 @@ sudo chown $SERVICE_USER:$SERVICE_USER $APP_DIR
 # Clone and build application
 echo "🔨 Building application..."
 cd $APP_DIR
-sudo -u $SERVICE_USER git clone . || (sudo -u $SERVICE_USER git pull)
+sudo -u $SERVICE_USER git clone https://github.com/tacssuki/EphemeralMail.git . || (sudo -u $SERVICE_USER git pull)
 sudo -u $SERVICE_USER npm install
 sudo -u $SERVICE_USER npm run build
 
@@ -63,7 +63,7 @@ echo "🔑 Save this API key for admin access!"
 
 # Setup PM2
 echo "🔄 Setting up PM2..."
-sudo -u $SERVICE_USER pm2 start dist/index.js --name tempmail
+sudo -u $SERVICE_USER pm2 start dist/index.js --name ephemeral-mail
 sudo -u $SERVICE_USER pm2 startup
 sudo -u $SERVICE_USER pm2 save
 
@@ -83,7 +83,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     sudo apt install -y nginx
     
     # Create Nginx configuration
-    sudo tee /etc/nginx/sites-available/tempmail > /dev/null <<EOF
+    sudo tee /etc/nginx/sites-available/ephemeral-mail > /dev/null <<EOF
 server {
     listen 80;
     server_name $DOMAIN;
@@ -98,7 +98,7 @@ server {
 }
 EOF
     
-    sudo ln -sf /etc/nginx/sites-available/tempmail /etc/nginx/sites-enabled/
+    sudo ln -sf /etc/nginx/sites-available/ephemeral-mail /etc/nginx/sites-enabled/
     sudo nginx -t
     sudo systemctl restart nginx
     sudo systemctl enable nginx
@@ -123,5 +123,5 @@ echo "4. API Key for admin: $API_KEY"
 echo ""
 echo "🔧 Useful commands:"
 echo "  - Check status: sudo -u $SERVICE_USER pm2 status"
-echo "  - View logs: sudo -u $SERVICE_USER pm2 logs tempmail"
-echo "  - Restart: sudo -u $SERVICE_USER pm2 restart tempmail"
+echo "  - View logs: sudo -u $SERVICE_USER pm2 logs ephemeral-mail"
+echo "  - Restart: sudo -u $SERVICE_USER pm2 restart ephemeral-mail"
