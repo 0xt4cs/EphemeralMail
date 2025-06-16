@@ -32,11 +32,11 @@ RUN mkdir -p /app/data && \
 USER tempmail
 
 # Expose ports
-EXPOSE 3000 25
+EXPOSE 4444 25
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1))"
+    CMD node -e "require('http').get('http://localhost:4444/api/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1))"
 
 # Start the application
 CMD ["npm", "start"]

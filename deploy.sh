@@ -108,7 +108,7 @@ if [ ! -f .env ]; then
         echo "📝 Creating .env file..."
         sudo -u $SERVICE_USER tee .env > /dev/null <<EOF
 NODE_ENV=production
-PORT=3000
+PORT=4444
 DOMAIN=$DOMAIN
 DATABASE_URL="file:./prod.db"
 SMTP_PORT=25
@@ -164,6 +164,7 @@ sudo ufw allow 22/tcp
 sudo ufw allow 25/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
+sudo ufw allow 4444/tcp
 sudo ufw --force enable
 
 # Setup Nginx reverse proxy
@@ -185,7 +186,7 @@ server {
     add_header X-XSS-Protection "1; mode=block";
     
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:4444;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;

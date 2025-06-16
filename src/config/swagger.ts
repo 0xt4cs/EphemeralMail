@@ -7,7 +7,7 @@ const options = {
     info: {
       title: 'Temporary Email API',
       version: '1.0.0',
-      description: 'A modern temporary email service API with advanced features',
+      description: 'A modern-lightweight temporary email service API',
       contact: {
         name: 'API Support',
         email: `admin@${config.email.domain}`,

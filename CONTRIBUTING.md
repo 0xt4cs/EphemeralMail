@@ -36,8 +36,8 @@ npm run dev
 ```
 
 The application will be available at:
-- API: http://localhost:3000
-- API Docs: http://localhost:3000/api-docs
+- API: http://localhost:4444
+- API Docs: http://localhost:4444/api-docs
 - SMTP Server: localhost:2525 (development)
 
 ### Testing Your Changes

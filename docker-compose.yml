@@ -3,13 +3,11 @@ version: '3.8'
 services:  ephemeral-mail:
     build: .
     container_name: ephemeral-mail-backend
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-      - "25:25"
-    environment:
+    restart: unless-stopped    ports:
+      - "4444:4444"
+      - "25:25"    environment:
       - NODE_ENV=production
-      - PORT=3000
+      - PORT=4444
       - SMTP_PORT=25
       - DOMAIN=${DOMAIN:-localhost}
       - DATABASE_URL=file:/app/data/emails.db
@@ -22,7 +20,7 @@ services:  ephemeral-mail:
       - tempmail_data:/app/data
       - tempmail_logs:/app/logs
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1))"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4444/api/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1))"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -2,6 +2,8 @@
 
 This guide covers scenarios where you have multiple VPS instances and want to deploy EphemeralMail alongside existing applications.
 
+> **ℹ️ Port Information**: EphemeralMail runs on port 4444 by default (instead of the common port 3000 used by frontend frameworks) to avoid conflicts with React, Next.js, and other development tools.
+
 ## 🎯 Scenario: Domain Already in Use
 
 If your domain `example.com` already points to another VPS running a different application, you have several deployment options:
@@ -46,7 +48,7 @@ Configure your existing nginx on VPS1 to proxy email requests to VPS2:
 **On VPS1 (existing server), add to nginx config:**
 ```nginx
 location /mail/ {
-    proxy_pass http://VPS2_IP:3000/;
+    proxy_pass http://VPS2_IP:4444/;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -78,7 +80,7 @@ bash deploy.sh example.com
 ```env
 # VPS2 - Temp Mail Service
 NODE_ENV=production
-PORT=3000
+PORT=4444
 DATABASE_URL="file:./emails.db"
 ALLOWED_ORIGINS=https://mail.example.com
 CORS_ORIGINS=https://mail.example.com

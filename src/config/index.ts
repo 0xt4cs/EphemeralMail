@@ -3,17 +3,16 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const config = {
-  port: parseInt(process.env.PORT || '3000', 10),
+  port: parseInt(process.env.PORT || '4444', 10),
   smtpPort: parseInt(process.env.SMTP_PORT || '25', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
   
   database: {
     url: process.env.DATABASE_URL || 'file:./emails.db',
   },
-  
-  security: {
+    security: {
     apiKeySecret: process.env.API_KEY_SECRET || 'default-secret-change-in-production',
-    allowedOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(','),
+    allowedOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:4444').split(','),
   },
   
   rateLimit: {

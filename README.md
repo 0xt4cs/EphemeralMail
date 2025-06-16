@@ -60,10 +60,14 @@ Key environment variables:
 
 ```env
 # Server
-PORT=3000
+PORT=4444
 SMTP_PORT=25
 DOMAIN=yourdomain.com
+```
 
+> **ℹ️ Why Port 4444?** We use port 4444 instead of the common port 3000 to avoid conflicts with frontend development servers (React, Next.js, Vite, etc.) that typically run on port 3000.
+
+```env
 # Security
 API_KEY_SECRET=your-secret-key
 RATE_LIMIT_MAX_REQUESTS=100
@@ -116,7 +120,8 @@ The script automatically handles:
 - ✅ Optional Nginx reverse proxy setup
 - ✅ Optional SSL certificate installation
 
-> 📚 **For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)**
+> 📚 **For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)**  
+> 🌐 **For multi-VPS setups, see [MULTI_VPS_GUIDE.md](./MULTI_VPS_GUIDE.md)**
 
 ### Manual VPS Deployment
 
@@ -165,9 +170,8 @@ The script automatically handles:
    server {
        listen 80;
        server_name yourdomain.com;
-       
-       location / {
-           proxy_pass http://localhost:3000;
+         location / {
+           proxy_pass http://localhost:4444;
            proxy_set_header Host $host;
            proxy_set_header X-Real-IP $remote_addr;
        }
@@ -193,14 +197,48 @@ RUN npm ci --only=production
 COPY dist/ ./dist/
 COPY prisma/ ./prisma/
 RUN npx prisma generate
-EXPOSE 3000 25
+EXPOSE 4444 25
 CMD ["npm", "start"]
 ```
 
 ```bash
 # Build and run
 docker build -t ephemeral-mail .
-docker run -p 3000:3000 -p 25:25 -v ./data:/app/data ephemeral-mail
+docker run -p 4444:4444 -p 25:25 -v ./data:/app/data ephemeral-mail
+```
+
+## Maintenance
+
+### Updating Your Installation
+
+For existing installations, use the update script:
+
+```bash
+# Navigate to your installation directory
+cd /opt/ephemeral-mail
+
+# Run the update script
+./update.sh
+```
+
+The update script will:
+- Pull the latest code from GitHub
+- Install new dependencies
+- Rebuild the application
+- Update the database schema
+- Restart the service with zero downtime
+
+### Manual Updates
+
+If you prefer manual updates:
+
+```bash
+cd /opt/ephemeral-mail
+sudo -u ephemeral-mail git pull
+sudo -u ephemeral-mail npm install
+sudo -u ephemeral-mail npm run build
+sudo -u ephemeral-mail npx prisma generate
+sudo -u ephemeral-mail pm2 restart ephemeral-mail
 ```
 
 ## Architecture

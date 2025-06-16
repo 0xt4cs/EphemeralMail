@@ -155,14 +155,14 @@ sudo -u ephemeral-mail pm2 save
 
 ### Check Service Status
 ```bash
-sudo -u tempmail pm2 status
-sudo -u tempmail pm2 logs tempmail
+sudo -u ephemeral-mail pm2 status
+sudo -u ephemeral-mail pm2 logs ephemeral-mail
 ```
 
 ### View System Logs
 ```bash
 journalctl -u nginx -f
-tail -f /opt/tempmail/logs/app.log
+tail -f /opt/ephemeral-mail/logs/app.log
 ```
 
 ### Monitor Resources
@@ -190,17 +190,17 @@ sudo ufw enable
 ### Regular Updates
 ```bash
 # Create update script
-cat > /opt/tempmail/update.sh << 'EOF'
+cat > /opt/ephemeral-mail/update.sh << 'EOF'
 #!/bin/bash
-cd /opt/tempmail
-sudo -u tempmail git pull
-sudo -u tempmail npm install
-sudo -u tempmail npm run build
-sudo -u tempmail npx prisma generate
-sudo -u tempmail pm2 restart tempmail
+cd /opt/ephemeral-mail
+sudo -u ephemeral-mail git pull
+sudo -u ephemeral-mail npm install
+sudo -u ephemeral-mail npm run build
+sudo -u ephemeral-mail npx prisma generate
+sudo -u ephemeral-mail pm2 restart ephemeral-mail
 EOF
 
-chmod +x /opt/tempmail/update.sh
+chmod +x /opt/ephemeral-mail/update.sh
 ```
 
 ## 🔧 Step 9: Backup Setup
@@ -208,20 +208,20 @@ chmod +x /opt/tempmail/update.sh
 ### Database Backup
 ```bash
 # Create backup script
-cat > /opt/tempmail/backup.sh << 'EOF'
+cat > /opt/ephemeral-mail/backup.sh << 'EOF'
 #!/bin/bash
-BACKUP_DIR="/opt/tempmail/backups"
+BACKUP_DIR="/opt/ephemeral-mail/backups"
 DATE=$(date +%Y%m%d_%H%M%S)
 
 mkdir -p $BACKUP_DIR
-cp /opt/tempmail/emails.db $BACKUP_DIR/emails_$DATE.db
+cp /opt/ephemeral-mail/emails.db $BACKUP_DIR/emails_$DATE.db
 find $BACKUP_DIR -name "emails_*.db" -mtime +7 -delete
 EOF
 
-chmod +x /opt/tempmail/backup.sh
+chmod +x /opt/ephemeral-mail/backup.sh
 
 # Add to crontab (daily backup at 2 AM)
-echo "0 2 * * * /opt/tempmail/backup.sh" | sudo -u tempmail crontab -
+echo "0 2 * * * /opt/ephemeral-mail/backup.sh" | sudo -u ephemeral-mail crontab -
 ```
 
 ## 📞 Step 10: Troubleshooting
@@ -245,8 +245,8 @@ echo "0 2 * * * /opt/tempmail/backup.sh" | sudo -u tempmail crontab -
 
 4. **Application not starting**:
    ```bash
-   sudo -u tempmail pm2 logs tempmail
-   sudo -u tempmail pm2 restart tempmail
+   sudo -u ephemeral-mail pm2 logs ephemeral-mail
+   sudo -u ephemeral-mail pm2 restart ephemeral-mail
    ```
 
 ### Health Checks
@@ -258,7 +258,7 @@ telnet yourdomain.com 25
 curl -I http://yourdomain.com/api/health
 
 # Check database
-sudo -u tempmail node -e "
+sudo -u ephemeral-mail node -e "
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 prisma.\$queryRaw\`SELECT 1\`.then(() => {
@@ -281,9 +281,9 @@ Your temporary email service should now be running at:
 ### Important Information
 
 - **API Key**: Save the generated API key for admin access
-- **Logs Location**: `/opt/tempmail/logs/`
-- **Database Location**: `/opt/tempmail/emails.db`
-- **Service User**: `tempmail`
+- **Logs Location**: `/opt/ephemeral-mail/logs/`
+- **Database Location**: `/opt/ephemeral-mail/emails.db`
+- **Service User**: `ephemeral-mail`
 
 ### TODOs
 
