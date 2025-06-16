@@ -1,4 +1,11 @@
-# EphemeralMail - Backend API
+# EphemeralMail - B- 🚀 **Lightweight & Fast** - Alpine-based Docker image (~50MB)
+- 🔒 **Privacy-Focused** - Auto-delete emails after 24 hours
+- 📧 **Built-in SMTP** - No external email server needed
+- 🛡️ **Secure by Default** - Rate limiting, validation, security headers
+- 📱 **RESTful API** - Clean, documented endpoints
+- 🤖 **Self-Managing** - Automatic cleanup and resource management
+- 🐳 **Docker Ready** - One-command deployment
+- 📊 **Admin Dashboard** - Monitor usage and manage emailsPI
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/tacssuki/EphemeralMail/main/eemail.png" alt="EphemeralMail Logo" width="128" height="128">
@@ -154,11 +161,29 @@ RATE_LIMIT_WINDOW_MS=900000
 ### API Documentation
 
 Interactive API docs available at: `http://localhost:4444/api-docs`
+
+### Example API Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "emails": [
+      {
+        "id": "email_123",
+        "subject": "Welcome!",
+        "from": "sender@example.com",
+        "to": "temp123@yourdomain.com",
+        "date": "2025-06-16T08:02:28.046Z",
+        "preview": "Welcome to our service..."
+      }
+    ],
     "hasMore": false
   },
   "message": "Emails retrieved successfully",
   "timestamp": "2025-06-16T08:02:28.046Z"
 }
+```
 ```
 
 ### Testing Email Reception
@@ -186,6 +211,11 @@ The easiest way to deploy EphemeralMail is using our automated deployment script
 # Clone the repository
 git clone https://github.com/tacssuki/EphemeralMail.git
 cd EphemeralMail
+
+# Deploy with your domain
+chmod +x deploy.sh
+./deploy.sh yourdomain.com
+```
 
 ## Architecture
 
