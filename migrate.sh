@@ -1,19 +1,30 @@
 #!/bin/bash
 
-# Migration script to move from /var/www/EphemeralMail to /opt/ephemeral-mail
-# Run this script if you have an existing installation in the wrong location
+# Migration script for EphemeralMail
+# Handles migration from old installations or directory moves
+# Repository: https://github.com/tacssuki/EphemeralMail
 
 set -e
 
-OLD_DIR="/var/www/EphemeralMail"
+OLD_DIRS=("/var/www/EphemeralMail" "/opt/tempmail" "/home/ubuntu/EphemeralMail")
 NEW_DIR="/opt/ephemeral-mail"
 SERVICE_USER="ephemeral-mail"
 
-echo "🔄 Migrating EphemeralMail installation..."
+echo "🔄 EphemeralMail Migration Script"
+echo "📁 Target directory: $NEW_DIR"
 
-# Check if old directory exists
-if [ ! -d "$OLD_DIR" ]; then
-    echo "❌ Old installation not found at $OLD_DIR"
+# Find existing installation
+FOUND_DIR=""
+for dir in "${OLD_DIRS[@]}"; do
+    if [ -d "$dir" ]; then
+        FOUND_DIR="$dir"
+        echo "📍 Found existing installation at: $FOUND_DIR"
+        break
+    fi
+done
+
+if [ -z "$FOUND_DIR" ]; then
+    echo "❌ No existing installation found"
     echo "💡 Please run the main deploy.sh script instead"
     exit 1
 fi
@@ -23,9 +34,14 @@ echo "⏹️  Stopping existing services..."
 pm2 stop all 2>/dev/null || true
 pm2 delete all 2>/dev/null || true
 
-# Create new service user
-echo "👤 Creating service user..."
-sudo useradd -r -s /bin/false $SERVICE_USER || true
+# Create service user if doesn't exist
+echo "👤 Setting up service user..."
+if ! id "$SERVICE_USER" &>/dev/null; then
+    sudo useradd -r -s /bin/false $SERVICE_USER
+    echo "✅ Created user: $SERVICE_USER"
+else
+    echo "✅ User $SERVICE_USER already exists"
+fi
 
 # Create new directory
 echo "📁 Creating new application directory..."

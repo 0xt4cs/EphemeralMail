@@ -93,7 +93,32 @@ MAX_EMAILS_PER_ADDRESS=50
 
 ## Deployment
 
-### VPS Deployment (Ubuntu 22.04)
+### One-Command VPS Deployment (Ubuntu 22.04)
+
+The easiest way to deploy EphemeralMail is using our automated deployment script:
+
+```bash
+# Clone the repository
+git clone https://github.com/tacssuki/EphemeralMail.git
+cd EphemeralMail
+
+# Run the deployment script
+chmod +x deploy.sh
+./deploy.sh yourdomain.com
+```
+
+The script automatically handles:
+- ✅ Node.js 18 and PM2 installation
+- ✅ Application build and database setup
+- ✅ Environment configuration with secure API key generation
+- ✅ PM2 process management with auto-startup
+- ✅ Firewall configuration
+- ✅ Optional Nginx reverse proxy setup
+- ✅ Optional SSL certificate installation
+
+> 📚 **For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)**
+
+### Manual VPS Deployment
 
 1. **Server Setup**:
    ```bash
@@ -110,14 +135,12 @@ MAX_EMAILS_PER_ADDRESS=50
 
 2. **Deploy Application**:
    ```bash
-   # Clone your repository
+   # Clone the repository
    git clone https://github.com/tacssuki/EphemeralMail.git
-   cd ephemeral-mail
+   cd EphemeralMail
    
-   # Install dependencies
+   # Install dependencies and build
    npm install
-   
-   # Build the application
    npm run build
    
    # Setup database
@@ -126,7 +149,7 @@ MAX_EMAILS_PER_ADDRESS=50
    
    # Configure environment
    cp .env.example .env
-   # Edit .env with production values
+   # Edit .env with your production values
    ```
 
 3. **Configure Process Manager**:

@@ -1,6 +1,6 @@
 # Multiple VPS Deployment Guide
 
-This guide covers scenarios where you have multiple VPS instances and want to deploy the temp mail service alongside existing applications.
+This guide covers scenarios where you have multiple VPS instances and want to deploy EphemeralMail alongside existing applications.
 
 ## 🎯 Scenario: Domain Already in Use
 
@@ -8,13 +8,13 @@ If your domain `example.com` already points to another VPS running a different a
 
 ### ✅ **Option 1: Subdomain (Recommended)**
 
-Use a subdomain for the temp mail service:
+Use a subdomain for the email service:
 
 **Setup:**
-- Main domain: `example.com` → VPS1 (existing webapp)
-- Temp mail: `mail.example.com` → VPS2 (temp mail service)
+- Main domain: `example.com` → VPS1 (existing webapp)  
+- Email service: `mail.example.com` → VPS2 (EphemeralMail)
 
-**DNS Configuration (GoDaddy):**
+**DNS Configuration:**
 ```
 Type: A
 Name: mail
@@ -30,13 +30,18 @@ TTL: 600
 
 **Deployment:**
 ```bash
-# Deploy to VPS2
-bash deploy.sh mail.example.com
+# Clone on VPS2
+git clone https://github.com/tacssuki/EphemeralMail.git
+cd EphemeralMail
+
+# Deploy with subdomain
+chmod +x deploy.sh
+./deploy.sh mail.example.com
 ```
 
 ### ✅ **Option 2: Path-based Routing**
 
-Configure your existing nginx on VPS1 to proxy temp mail requests to VPS2:
+Configure your existing nginx on VPS1 to proxy email requests to VPS2:
 
 **On VPS1 (existing server), add to nginx config:**
 ```nginx

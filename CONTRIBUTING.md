@@ -1,4 +1,4 @@
-# Contributing to Temporary Email Service
+# Contributing to EphemeralMail
 
 Thank you for your interest in contributing to this project! We welcome all contributions, from bug reports to new features.
 
@@ -20,27 +20,41 @@ Thank you for your interest in contributing to this project! We welcome all cont
 ```bash
 # Clone the repository
 git clone https://github.com/tacssuki/EphemeralMail.git
-cd EphemeralMail  # or whatever you name the repo
+cd EphemeralMail
 
 # Install dependencies and setup
 npm install
 cp .env.example .env
+# Edit .env with your development settings
+
+# Setup database
+npx prisma generate
+npx prisma db push
+
+# Start development server
 npm run dev
 ```
 
-### Frontend Development (when available)
+The application will be available at:
+- API: http://localhost:3000
+- API Docs: http://localhost:3000/api-docs
+- SMTP Server: localhost:2525 (development)
+
+### Testing Your Changes
+
+For deployment testing, use the deployment script:
 
 ```bash
-cd frontend
-npm install
-npm run dev
+# Test deployment script
+chmod +x deploy.sh
+./deploy.sh localhost  # For local testing
 ```
 
 ## 📝 Code Style
 
 - Use TypeScript for type safety
-- Follow ESLint rules
-- Use Prettier for code formatting
+- Follow ESLint rules (run `npm run lint`)
+- Use Prettier for code formatting (run `npm run format`)
 - Write meaningful commit messages
 - Add tests for new features
 

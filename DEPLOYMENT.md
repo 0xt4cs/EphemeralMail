@@ -1,39 +1,31 @@
 # 🚀 VPS Deployment Guide for Ubuntu 22.04
 
-This guide will help you deploy the Temporary Email Service on your Ubuntu 22.04 VPS and configure it with your GoDaddy domain.
+This guide will help you deploy EphemeralMail on your Ubuntu 22.04 VPS with your custom domain.
 
 > **💡 Multiple VPS Setup?** If your domain already points to another VPS, see [MULTI_VPS_GUIDE.md](./MULTI_VPS_GUIDE.md) for subdomain and multi-server deployment options.
 
 ## 📋 Prerequisites
 
 - Ubuntu 22.04 VPS with root access
-- Domain purchased from GoDaddy
+- Domain name with DNS management access
 - Basic knowledge of Linux commands
 
-## 🔧 Step 1: Server Preparation
+## � Quick Deployment (Recommended)
 
-Connect to your VPS via SSH:
+### Step 1: Connect to Your VPS
 
 ```bash
 ssh root@your-vps-ip
 ```
 
-Update the system:
+### Step 2: Run the Automated Deployment Script
 
 ```bash
-apt update && apt upgrade -y
-```
-
-## 🚀 Step 2: Automated Deployment
-
-Upload your project to the VPS and run the deployment script:
-
-```bash
-# Clone or upload your project
+# Clone the repository
 git clone https://github.com/tacssuki/EphemeralMail.git
-cd EphemeralMail  # or whatever you name the repo
+cd EphemeralMail
 
-# Make deployment script executable
+# Make the script executable
 chmod +x deploy.sh
 
 # Run deployment (replace with your domain)
@@ -41,89 +33,119 @@ chmod +x deploy.sh
 ```
 
 The script will automatically:
-- Install Node.js 18
-- Install PM2 process manager
-- Build and start the application
-- Configure firewall
-- Optionally setup Nginx and SSL
+- ✅ Install Node.js 18 and PM2
+- ✅ Build and start the application
+- ✅ Setup database with Prisma
+- ✅ Generate secure API key
+- ✅ Configure firewall rules
+- ✅ Setup PM2 auto-startup
+- ✅ Optionally install Nginx reverse proxy
+- ✅ Optionally setup SSL certificate
 
-## 🌐 Step 3: DNS Configuration in GoDaddy
+### Step 3: Configure DNS
 
-1. **Login to GoDaddy**:
-   - Go to [GoDaddy DNS Management](https://dcc.godaddy.com/manage/dns)
-   - Select your domain
+After deployment, configure your DNS records:
 
-2. **Add MX Record**:
-   ```
-   Type: MX
-   Host: @
-   Points to: yourdomain.com
-   Priority: 10
-   TTL: 1 Hour
-   ```
+**For GoDaddy:**
+1. Login to [GoDaddy DNS Management](https://dcc.godaddy.com/manage/dns)
+2. Add these records:
 
-3. **Add A Record**:
-   ```
-   Type: A
-   Host: @
-   Points to: YOUR_VPS_IP_ADDRESS
-   TTL: 1 Hour
-   ```
+```
+Type: A
+Host: @
+Points to: YOUR_VPS_IP
+TTL: 1 Hour
 
-4. **Optional - Add WWW redirect**:
-   ```
-   Type: CNAME
-   Host: www
-   Points to: yourdomain.com
-   TTL: 1 Hour
-   ```
+Type: MX  
+Host: @
+Points to: yourdomain.com
+Priority: 10
+TTL: 1 Hour
+```
 
-## 🔒 Step 4: SSL Certificate (Optional but Recommended)
+**For Cloudflare:**
+1. Login to Cloudflare dashboard
+2. Add these records:
 
-If you chose to install SSL during deployment:
+```
+Type: A
+Name: @
+Content: YOUR_VPS_IP
+Proxy: Off (DNS only)
+
+Type: MX
+Name: @  
+Mail server: yourdomain.com
+Priority: 10
+```
+
+## � Manual Deployment
+
+If you prefer manual installation:
+
+### Step 1: Server Preparation
 
 ```bash
-# Generate SSL certificate
-sudo certbot --nginx -d yourdomain.com
+# Connect to your VPS
+ssh root@your-vps-ip
 
-# Auto-renewal test
-sudo certbot renew --dry-run
+# Update system
+apt update && apt upgrade -y
 ```
 
-## ⚙️ Step 5: Configuration
-
-Edit the environment file:
+### Step 2: Install Dependencies
 
 ```bash
-sudo nano /opt/tempmail/.env
+# Install Node.js 18
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Install PM2
+sudo npm install -g pm2
+
+# Create service user
+sudo useradd -r -s /bin/false ephemeral-mail
 ```
 
-Update these values:
-```env
-DOMAIN=yourdomain.com
-NODE_ENV=production
-API_KEY_SECRET=your-generated-api-key
-```
+### Step 3: Deploy Application
 
-Restart the service:
 ```bash
-sudo -u tempmail pm2 restart tempmail
+# Create app directory
+sudo mkdir -p /opt/ephemeral-mail
+sudo chown ephemeral-mail:ephemeral-mail /opt/ephemeral-mail
+cd /opt/ephemeral-mail
+
+# Clone repository
+sudo -u ephemeral-mail git clone https://github.com/tacssuki/EphemeralMail.git .
+
+# Install and build
+sudo -u ephemeral-mail npm install
+sudo -u ephemeral-mail npm run build
+
+# Setup database
+sudo -u ephemeral-mail npx prisma generate
+sudo -u ephemeral-mail npx prisma db push
+
+# Configure environment
+sudo -u ephemeral-mail cp .env.example .env
+# Edit .env with your domain and settings
+
+# Start with PM2
+sudo -u ephemeral-mail pm2 start dist/index.js --name ephemeral-mail
+sudo -u ephemeral-mail pm2 startup
+sudo -u ephemeral-mail pm2 save
 ```
 
-## 🔍 Step 6: Testing
+## 🔍 Testing Your Deployment
 
-1. **Test API**:
+1. **Test API Health**:
    ```bash
    curl http://yourdomain.com/api/health
    ```
 
-2. **Test Email Reception**:
+2. **Test Email Generation**:
    ```bash
-   # Generate test email
    curl -X POST http://yourdomain.com/api/emails/generate
-   
-   # Send test email to the generated address
-   echo "Test email body" | mail -s "Test Subject" generated-email@yourdomain.com
    ```
 
 3. **Check API Documentation**:
@@ -263,7 +285,7 @@ Your temporary email service should now be running at:
 - **Database Location**: `/opt/tempmail/emails.db`
 - **Service User**: `tempmail`
 
-### Next Steps
+### TODOs
 
 1. Test email reception thoroughly
 2. Set up monitoring and alerting
