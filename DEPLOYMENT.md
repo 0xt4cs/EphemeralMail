@@ -10,7 +10,7 @@ This guide will help you deploy EphemeralMail on your Ubuntu 22.04 VPS with your
 - Domain name with DNS management access
 - Basic knowledge of Linux commands
 
-## � Quick Deployment (Recommended)
+## 🚀 Quick Deployment (Recommended)
 
 ### Step 1: Connect to Your VPS
 
@@ -79,7 +79,7 @@ Mail server: yourdomain.com
 Priority: 10
 ```
 
-## � Manual Deployment
+## 🔧 Manual Deployment
 
 If you prefer manual installation:
 
