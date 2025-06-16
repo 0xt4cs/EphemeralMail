@@ -24,7 +24,8 @@ A modern, feature-rich temporary email service built with TypeScript, Express, a
 
 ### Installation
 
-1. **Clone and setup**:   ```bash
+1. **Clone and setup**:  
+   ```bash
    git clone https://github.com/tacssuki/EphemeralMail.git
    cd EphemeralMail
    npm install
