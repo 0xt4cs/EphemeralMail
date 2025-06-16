@@ -6,8 +6,8 @@
 set -e
 
 DOMAIN=${1:-localhost}
-APP_DIR="/opt/tempmail"
-SERVICE_USER="tempmail"
+APP_DIR="/opt/ephemeral-mail"
+SERVICE_USER="ephemeral-mail"
 
 echo "🚀 Starting deployment for domain: $DOMAIN"
 echo "💡 Note: If you're using a subdomain (recommended), make sure to:"
@@ -38,8 +38,21 @@ sudo chown $SERVICE_USER:$SERVICE_USER $APP_DIR
 
 # Clone and build application
 echo "🔨 Building application..."
+sudo mkdir -p $APP_DIR
+sudo chown $SERVICE_USER:$SERVICE_USER $APP_DIR
 cd $APP_DIR
-sudo -u $SERVICE_USER git clone https://github.com/tacssuki/EphemeralMail.git . || (sudo -u $SERVICE_USER git pull)
+
+# Check if git repo already exists
+if [ -d ".git" ]; then
+    echo "📥 Updating existing repository..."
+    sudo -u $SERVICE_USER git stash || true
+    sudo -u $SERVICE_USER git pull origin main
+    sudo -u $SERVICE_USER git stash pop || true
+else
+    echo "📥 Cloning repository..."
+    sudo -u $SERVICE_USER git clone https://github.com/tacssuki/EphemeralMail.git .
+fi
+
 sudo -u $SERVICE_USER npm install
 sudo -u $SERVICE_USER npm run build
 
@@ -50,19 +63,32 @@ sudo -u $SERVICE_USER npx prisma db push
 
 # Configure environment
 echo "⚙️ Configuring environment..."
-sudo -u $SERVICE_USER cp .env.example .env
+if [ ! -f .env ]; then
+    sudo -u $SERVICE_USER cp .env.example .env
+    echo "📝 Created .env from template"
+fi
+
+# Update environment variables
 sudo -u $SERVICE_USER sed -i "s/DOMAIN=localhost/DOMAIN=$DOMAIN/g" .env
 sudo -u $SERVICE_USER sed -i "s/NODE_ENV=development/NODE_ENV=production/g" .env
 
-# Generate random API key
-API_KEY=$(openssl rand -hex 32)
-sudo -u $SERVICE_USER sed -i "s/API_KEY_SECRET=your-super-secret-key-here-change-in-production/API_KEY_SECRET=$API_KEY/g" .env
-
-echo "🔑 Generated API Key: $API_KEY"
-echo "🔑 Save this API key for admin access!"
+# Generate random API key if not already set
+if ! grep -q "API_KEY_SECRET=" .env || grep -q "your-super-secret-key-here" .env; then
+    API_KEY=$(openssl rand -hex 32)
+    sudo -u $SERVICE_USER sed -i "s/API_KEY_SECRET=.*/API_KEY_SECRET=$API_KEY/g" .env
+    echo "🔑 Generated API Key: $API_KEY"
+    echo "🔑 Save this API key for admin access!"
+else
+    echo "🔑 Using existing API key from .env"
+fi
 
 # Setup PM2
 echo "🔄 Setting up PM2..."
+# Stop existing process if running
+sudo -u $SERVICE_USER pm2 stop ephemeral-mail 2>/dev/null || true
+sudo -u $SERVICE_USER pm2 delete ephemeral-mail 2>/dev/null || true
+
+# Start the application
 sudo -u $SERVICE_USER pm2 start dist/index.js --name ephemeral-mail
 sudo -u $SERVICE_USER pm2 startup
 sudo -u $SERVICE_USER pm2 save
