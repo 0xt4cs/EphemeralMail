@@ -151,6 +151,46 @@ sudo -u ephemeral-mail pm2 save
 3. **Check API Documentation**:
    - Visit: `http://yourdomain.com/api-docs`
 
+## 🧪 Post-Deployment Testing
+
+After successful deployment, verify your installation:
+
+### 1. Test API Health
+```bash
+curl https://yourdomain.com/api/health
+# Expected: {"success":true,"message":"Server is running","timestamp":"..."}
+```
+
+### 2. Test Email Generation
+```bash
+curl -X POST https://yourdomain.com/api/emails/generate \
+  -H "Content-Type: application/json" \
+  -d '{}'
+# Expected: HTTP 201 with generated email address
+```
+
+### 3. Test SMTP Reception
+```bash
+# Generate an email address first, then send to it
+EMAIL=$(curl -s -X POST https://yourdomain.com/api/emails/generate -H "Content-Type: application/json" -d '{}' | jq -r '.data.address')
+
+# Send test email
+echo "Subject: Test Email
+
+This is a test email." | sendmail $EMAIL
+
+# Verify reception (wait a few seconds)
+curl https://yourdomain.com/api/emails/$EMAIL
+# Expected: JSON with received email
+```
+
+### 4. Test API Documentation
+```bash
+# Should be accessible
+curl -I https://yourdomain.com/api-docs
+# Expected: HTTP 200 or 301 (redirect)
+```
+
 ## 📊 Step 7: Monitoring
 
 ### Check Service Status

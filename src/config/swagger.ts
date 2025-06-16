@@ -4,8 +4,8 @@ import { config } from '@/config';
 const options = {
   definition: {
     openapi: '3.0.0',
-    info: {
-      title: 'Temporary Email API',
+    info: {      
+      title: 'EphemeralMail API',
       version: '1.0.0',
       description: 'A modern-lightweight temporary email service API',
       contact: {

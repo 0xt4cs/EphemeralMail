@@ -95,6 +95,84 @@ MAX_EMAILS_PER_ADDRESS=50
 - `POST /api/admin/blacklist` - Blacklist domain
 - `GET /api/admin/blacklist` - Get blacklisted domains
 
+## API Examples
+
+### Generate Email Address
+
+**Request:**
+```bash
+curl -X POST https://yourdomain.com/api/emails/generate \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "address": "klcppd3gdg@yourdomain.com",
+    "domain": "yourdomain.com",
+    "localPart": "klcppd3gdg",
+    "createdAt": "2025-06-16T08:02:23.136Z"
+  },
+  "message": "Email address generated successfully",
+  "timestamp": "2025-06-16T08:02:23.136Z"
+}
+```
+
+### Retrieve Emails
+
+**Request:**
+```bash
+curl https://yourdomain.com/api/emails/klcppd3gdg@yourdomain.com
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "emails": [
+      {
+        "id": "cmbyt3m910008gar5fzux2khg",
+        "messageId": "<202506160802.55G82NQO1724277@vultr.guest>",
+        "to": "klcppd3gdg@yourdomain.com",
+        "from": "sender@example.com",
+        "subject": "Test Email",
+        "textBody": "This is a test email content.\n",
+        "htmlBody": "",
+        "attachments": [],
+        "size": 361,
+        "isRead": false,
+        "createdAt": "2025-06-16T08:02:23.462Z"
+      }
+    ],
+    "total": 1,
+    "page": 1,
+    "limit": 20,
+    "hasMore": false
+  },
+  "message": "Emails retrieved successfully",
+  "timestamp": "2025-06-16T08:02:28.046Z"
+}
+```
+
+### Testing Email Reception
+
+**Send Test Email:**
+```bash
+echo "Subject: Test Email
+
+This is a test email content." | sendmail test@yourdomain.com
+```
+
+**Verify Reception:**
+```bash
+curl https://yourdomain.com/api/emails/test@yourdomain.com | jq '.data.emails[0].subject'
+# Output: "Test Email"
+```
+
 ## Deployment
 
 ### One-Command VPS Deployment (Ubuntu 22.04)
