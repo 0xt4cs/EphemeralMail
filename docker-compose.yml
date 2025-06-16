@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:  ephemeral-mail:
+    build: .
+    container_name: ephemeral-mail-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "25:25"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - SMTP_PORT=25
+      - DOMAIN=${DOMAIN:-localhost}
+      - DATABASE_URL=file:/app/data/emails.db
+      - API_KEY_SECRET=${API_KEY_SECRET:-change-me-in-production}
+      - EMAIL_RETENTION_HOURS=${EMAIL_RETENTION_HOURS:-24}
+      - MAX_EMAIL_SIZE=${MAX_EMAIL_SIZE:-10485760}
+      - MAX_EMAILS_PER_ADDRESS=${MAX_EMAILS_PER_ADDRESS:-50}
+      - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-100}
+    volumes:
+      - tempmail_data:/app/data
+      - tempmail_logs:/app/logs
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nginx:
+    image: nginx:alpine
+    container_name: tempmail-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - certbot_data:/etc/letsencrypt
+      - nginx_html:/var/www/html
+    depends_on:
+      - tempmail
+
+  certbot:
+    image: certbot/certbot
+    container_name: tempmail-certbot
+    volumes:
+      - certbot_data:/etc/letsencrypt
+      - nginx_html:/var/www/html
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  tempmail_data:
+  tempmail_logs:
+  certbot_data:
+  nginx_html:

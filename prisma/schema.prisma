@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Email {
+  id          String   @id @default(cuid())
+  messageId   String?  @unique
+  to          String   // recipient email address
+  from        String   // sender email address
+  subject     String?
+  textBody    String?
+  htmlBody    String?
+  attachments String?  // Store attachment metadata as JSON string
+  headers     String?  // Store email headers as JSON string
+  size        Int      @default(0)
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([to])
+  @@index([createdAt])
+  @@index([messageId])
+}
+
+model EmailAddress {
+  id          String   @id @default(cuid())
+  address     String   @unique
+  domain      String
+  localPart   String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  lastUsed    DateTime @default(now())
+  emailCount  Int      @default(0)
+
+  @@index([address])
+  @@index([domain])
+  @@index([createdAt])
+}
+
+model BlacklistedDomain {
+  id        String   @id @default(cuid())
+  domain    String   @unique
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([domain])
+}
+
+model ApiUsage {
+  id        String   @id @default(cuid())
+  ip        String
+  endpoint  String
+  userAgent String?
+  timestamp DateTime @default(now())
+
+  @@index([ip])
+  @@index([timestamp])
+}
