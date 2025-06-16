@@ -9,10 +9,9 @@ export const config = {
   
   database: {
     url: process.env.DATABASE_URL || 'file:./emails.db',
-  },
-    security: {
+  },    security: {
     apiKeySecret: process.env.API_KEY_SECRET || 'default-secret-change-in-production',
-    allowedOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:4444').split(','),
+    allowedOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:4444,http://localhost:4173').split(','),
   },
   
   rateLimit: {

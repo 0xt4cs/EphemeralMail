@@ -1,6 +1,11 @@
 # Logs
 logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
 # Runtime data
 pids
@@ -12,6 +17,9 @@ pids
 coverage/
 *.lcov
 
+# nyc test coverage
+.nyc_output
+
 # Dependency directories
 node_modules/
 jspm_packages/
@@ -19,39 +27,101 @@ jspm_packages/
 # TypeScript build
 dist/
 build/
+*.tsbuildinfo
 
 # Environment variables
 .env
+.env.*
+!.env.example
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# Database
+# Database files
 *.db
 *.sqlite
+*.sqlite3
+*.db-journal
+emails.db*
 
-# IDE
+# Prisma
+prisma/migrations/dev.db
+prisma/dev.db
+prisma/*.db-journal
+
+# IDE directories and files
 .vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
 .idea/
 *.swp
 *.swo
+*.swn
+*~
 
-# OS
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
-
-# Prisma
-prisma/migrations/
-
-# Backup files and folders
-backup/
-*.backup
-*.bak
+Desktop.ini
+Icon?
 
 # PM2
 .pm2/
+ecosystem.config.js
 
 # Backup/Legacy files
 backup/
 backend/
+*.backup
+*.bak
+*_backup
+*_old
+*_OLD
+*_new
+*_NEW
+
+# Temporary files
+*.tmp
+*.temp
+
+# Cache directories
+.npm
+.yarn
+.pnpm
+.cache/
+.eslintcache
+
+# Test files
+test-results/
+test-output/
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.cert
+
+# Email attachments and uploads
+uploads/
+attachments/
+temp/
+
+# Process management
+*.lock
+
+# Application specific
+emails.db-*
+app.log*
+error.log*

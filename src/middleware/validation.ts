@@ -13,10 +13,9 @@ export const emailValidation = {
     search: Joi.string().max(100).optional(),
     unreadOnly: Joi.boolean().default(false),
   }),
-
   // Validate email address parameter
   emailAddress: Joi.object({
-    address: Joi.string().email().required(),
+    address: Joi.string().pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+$/).required(),
   }),
 
   // Validate email ID parameter

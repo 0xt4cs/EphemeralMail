@@ -2,8 +2,7 @@
   "name": "ephemeral-mail",
   "version": "1.0.0",
   "description": "Modern temporary email service with TypeScript, Express, and Prisma",
-  "main": "dist/index.js",
-  "scripts": {
+  "main": "dist/index.js",  "scripts": {
     "build": "tsc && tsc-alias",
     "start": "node -r tsconfig-paths/register dist/index.js",
     "start:prod": "node dist/index.js",
@@ -12,7 +11,23 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "clean": "rimraf dist",
-    "prebuild": "npm run clean"
+    "clean:all": "rimraf dist node_modules && npm install",
+    "clean:logs": "rimraf logs/*.log",
+    "clean:db": "rimraf prisma/*.db prisma/*.db-journal",
+    "clean:redundant": "find . -name '*_old*' -o -name '*_OLD*' -o -name '*_new*' -o -name '*_NEW*' -o -name '*.bak' -o -name '*.backup' | xargs rm -f",
+    "prebuild": "npm run clean",
+    "deploy": "./deploy.sh",
+    "docker:build": "docker build -t ephemeral-mail .",
+    "docker:run": "docker-compose up -d",
+    "docker:stop": "docker-compose down",
+    "db:setup": "npx prisma generate && npx prisma db push",
+    "db:migrate": "npx prisma migrate dev",
+    "db:reset": "npx prisma migrate reset",
+    "logs": "tail -f logs/app.log",
+    "pm2:start": "pm2 start dist/index.js --name ephemeral-mail",
+    "pm2:stop": "pm2 stop ephemeral-mail",
+    "pm2:restart": "pm2 restart ephemeral-mail",
+    "pm2:logs": "pm2 logs ephemeral-mail"
   },
   "keywords": [
     "email",

@@ -1,33 +1,85 @@
-# Temporary Email Service
+# EphemeralMail - Backend API
 
-A modern, feature-rich temporary email service built with TypeScript, Express, and Prisma. Perfect for developers who need a self-hosted disposable email solution.
+<div align="center">
+  <img src="https://raw.githubusercontent.com/tacssuki/EphemeralMail/main/eemail.png" alt="EphemeralMail Logo" width="128" height="128">
+  <h3>🚀 Lightweight Temporary Email Service</h3>
+  <p>A modern, self-hosted backend API for disposable email addresses</p>
+  
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+  [![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+</div>
 
-## Features
+## Overview
 
-- 🚀 **Modern Tech Stack**: TypeScript, Express, Prisma, SQLite
-- 📧 **Full SMTP Server**: Receives and processes emails on any domain
-- 🔒 **Security**: Rate limiting, CORS, Helmet, API key authentication
-- 📊 **Admin Dashboard**: Statistics, cleanup, blacklisting
-- 📚 **API Documentation**: OpenAPI/Swagger docs
-- 🧹 **Auto Cleanup**: Configurable email retention
-- 🔍 **Search & Filter**: Email search and filtering capabilities
-- 📱 **API Ready**: RESTful API for any frontend
-- 🐳 **Docker Ready**: Easy deployment with Docker
-- 🌐 **Multi-domain**: Support for custom domains
+EphemeralMail Backend is a **lightweight, self-contained API service** for creating and managing temporary email addresses. Perfect for testing, privacy protection, and development environments.
+
+### Key Features
+
+- 🚀 **Lightweight & Fast** - Alpine-based Docker image (~50MB)
+- 🔒 **Privacy-Focused** - Auto-delete emails after 24 hours
+- 📧 **Built-in SMTP** - No external email server needed
+- �️ **Secure by Default** - Rate limiting, validation, security headers
+- 📱 **RESTful API** - Clean, documented endpoints
+- � **Self-Managing** - Automatic cleanup and resource management
+- � **Docker Ready** - One-command deployment
+- 📊 **Admin Dashboard** - Monitor usage and manage emails
+
+### Frontend Options
+
+While this backend works with any frontend, we recommend our official web interface:
+
+**🎨 [EphemeralMail-Svelte Frontend](https://github.com/tacssuki/EphemeralMail-svelte)**
+- Modern, responsive design
+- Real-time email updates  
+- Mobile-friendly interface
+- PWA capabilities
+
+*Or build your own frontend using our API!*
 
 ## Quick Start
 
-### Prerequisites
+### Option 1: One-Command Deployment (Recommended)
 
-- Node.js 18+ 
-- npm or yarn
+```bash
+# Clone the repository
+git clone https://github.com/tacssuki/EphemeralMail.git
+cd EphemeralMail
 
-### Installation
+# Deploy with your domain
+chmod +x deploy.sh
+./deploy.sh yourdomain.com
+```
 
-1. **Clone and setup**:  
+### Option 2: Docker Compose
+
+```bash
+# Clone and start
+git clone https://github.com/tacssuki/EphemeralMail.git
+cd EphemeralMail
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your settings
+
+# Build and run
+docker-compose up -d
+```
+
+### Option 3: Manual Installation
+
+```bash
+# Prerequisites: Node.js 18+
+npm install
+npm run build
+npm start
+```
+
+**Detailed Steps:**
+
+1. **Install dependencies**:
    ```bash
-   git clone https://github.com/tacssuki/EphemeralMail.git
-   cd EphemeralMail
    npm install
    ```
 
@@ -56,101 +108,52 @@ A modern, feature-rich temporary email service built with TypeScript, Express, a
 
 ## Configuration
 
-Key environment variables:
+Configure via environment variables or `.env` file:
 
 ```env
 # Server
 PORT=4444
 SMTP_PORT=25
 DOMAIN=yourdomain.com
-```
 
-> **ℹ️ Why Port 4444?** We use port 4444 instead of the common port 3000 to avoid conflicts with frontend development servers (React, Next.js, Vite, etc.) that typically run on port 3000.
-
-```env
 # Security
-API_KEY_SECRET=your-secret-key
-RATE_LIMIT_MAX_REQUESTS=100
+API_KEY_SECRET=your-secure-api-key
+ALLOWED_ORIGINS=https://yourdomain.com
 
-# Email
-MAX_EMAIL_SIZE=10485760
+# Email Settings
 EMAIL_RETENTION_HOURS=24
 MAX_EMAILS_PER_ADDRESS=50
+MAX_EMAIL_SIZE=10485760
+
+# Rate Limiting
+RATE_LIMIT_MAX_REQUESTS=100
+RATE_LIMIT_WINDOW_MS=900000
 ```
 
 ## API Endpoints
 
 ### Public Endpoints
 
-- `POST /api/emails/generate` - Generate new email address
-- `GET /api/emails/{address}` - Get emails for address
-- `GET /api/emails/message/{id}` - Get specific email
-- `DELETE /api/emails/message/{id}` - Delete email
-- `GET /api/health` - Health check
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/emails/generate` | Generate new email address |
+| `GET` | `/api/emails/:address` | Get emails for address |
+| `GET` | `/api/emails/:address/:id` | Get specific email content |
+| `DELETE` | `/api/emails/:address` | Delete all emails for address |
+| `GET` | `/api/health` | Health check |
 
-### Admin Endpoints (require API key)
+### Admin Endpoints (Require API Key)
 
-- `GET /api/admin/stats` - Server statistics
-- `POST /api/admin/cleanup` - Clean expired emails
-- `POST /api/admin/blacklist` - Blacklist domain
-- `GET /api/admin/blacklist` - Get blacklisted domains
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/admin/stats` | Get system statistics |
+| `POST` | `/api/admin/cleanup` | Manual cleanup expired emails |
+| `DELETE` | `/api/admin/addresses/:address` | Delete address and emails |
+| `DELETE` | `/api/admin/cleanup/all` | Delete all data |
 
-## API Examples
+### API Documentation
 
-### Generate Email Address
-
-**Request:**
-```bash
-curl -X POST https://yourdomain.com/api/emails/generate \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "address": "klcppd3gdg@yourdomain.com",
-    "domain": "yourdomain.com",
-    "localPart": "klcppd3gdg",
-    "createdAt": "2025-06-16T08:02:23.136Z"
-  },
-  "message": "Email address generated successfully",
-  "timestamp": "2025-06-16T08:02:23.136Z"
-}
-```
-
-### Retrieve Emails
-
-**Request:**
-```bash
-curl https://yourdomain.com/api/emails/klcppd3gdg@yourdomain.com
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "emails": [
-      {
-        "id": "cmbyt3m910008gar5fzux2khg",
-        "messageId": "<202506160802.55G82NQO1724277@vultr.guest>",
-        "to": "klcppd3gdg@yourdomain.com",
-        "from": "sender@example.com",
-        "subject": "Test Email",
-        "textBody": "This is a test email content.\n",
-        "htmlBody": "",
-        "attachments": [],
-        "size": 361,
-        "isRead": false,
-        "createdAt": "2025-06-16T08:02:23.462Z"
-      }
-    ],
-    "total": 1,
-    "page": 1,
-    "limit": 20,
+Interactive API docs available at: `http://localhost:4444/api-docs`
     "hasMore": false
   },
   "message": "Emails retrieved successfully",
@@ -184,172 +187,125 @@ The easiest way to deploy EphemeralMail is using our automated deployment script
 git clone https://github.com/tacssuki/EphemeralMail.git
 cd EphemeralMail
 
-# Run the deployment script
-chmod +x deploy.sh
-./deploy.sh yourdomain.com
-```
-
-The script automatically handles:
-- ✅ Node.js 18 and PM2 installation
-- ✅ Application build and database setup
-- ✅ Environment configuration with secure API key generation
-- ✅ PM2 process management with auto-startup
-- ✅ Firewall configuration
-- ✅ Optional Nginx reverse proxy setup
-- ✅ Optional SSL certificate installation
-
-> 📚 **For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)**  
-> 🌐 **For multi-VPS setups, see [MULTI_VPS_GUIDE.md](./MULTI_VPS_GUIDE.md)**
-
-### Manual VPS Deployment
-
-1. **Server Setup**:
-   ```bash
-   # Update system
-   sudo apt update && sudo apt upgrade -y
-   
-   # Install Node.js 18
-   curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-   sudo apt-get install -y nodejs
-   
-   # Install PM2 for process management
-   sudo npm install -g pm2
-   ```
-
-2. **Deploy Application**:
-   ```bash
-   # Clone the repository
-   git clone https://github.com/tacssuki/EphemeralMail.git
-   cd EphemeralMail
-   
-   # Install dependencies and build
-   npm install
-   npm run build
-   
-   # Setup database
-   npx prisma generate
-   npx prisma db push
-   
-   # Configure environment
-   cp .env.example .env
-   # Edit .env with your production values
-   ```
-
-3. **Configure Process Manager**:
-   ```bash
-   # Start with PM2
-   pm2 start dist/index.js --name ephemeral-mail
-   pm2 startup
-   pm2 save
-   ```
-
-4. **Setup Nginx (optional)**:
-   ```nginx
-   server {
-       listen 80;
-       server_name yourdomain.com;
-         location / {
-           proxy_pass http://localhost:4444;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-       }
-   }
-   ```
-
-5. **DNS Configuration**:
-   ```
-   # Add MX record in your DNS provider
-   MX 10 yourdomain.com
-   
-   # Add A record pointing to your VPS IP
-   A yourdomain.com your-vps-ip
-   ```
-
-### Docker Deployment
-
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY dist/ ./dist/
-COPY prisma/ ./prisma/
-RUN npx prisma generate
-EXPOSE 4444 25
-CMD ["npm", "start"]
-```
-
-```bash
-# Build and run
-docker build -t ephemeral-mail .
-docker run -p 4444:4444 -p 25:25 -v ./data:/app/data ephemeral-mail
-```
-
-## Maintenance
-
-### Updating Your Installation
-
-For existing installations, use the update script:
-
-```bash
-# Navigate to your installation directory
-cd /opt/ephemeral-mail
-
-# Run the update script
-./update.sh
-```
-
-The update script will:
-- Pull the latest code from GitHub
-- Install new dependencies
-- Rebuild the application
-- Update the database schema
-- Restart the service with zero downtime
-
-### Manual Updates
-
-If you prefer manual updates:
-
-```bash
-cd /opt/ephemeral-mail
-sudo -u ephemeral-mail git pull
-sudo -u ephemeral-mail npm install
-sudo -u ephemeral-mail npm run build
-sudo -u ephemeral-mail npx prisma generate
-sudo -u ephemeral-mail pm2 restart ephemeral-mail
-```
-
 ## Architecture
 
 ```
-src/
-├── config/          # Configuration files
-├── controllers/     # Request handlers
-├── middleware/      # Express middleware
-├── routes/          # API routes
-├── services/        # Business logic
-├── types/           # TypeScript types
-├── utils/           # Utility functions
-└── index.ts         # Application entry point
+├── src/
+│   ├── config/          # Configuration management
+│   ├── controllers/     # Route handlers
+│   ├── middleware/      # Security, validation, rate limiting
+│   ├── routes/          # API route definitions  
+│   ├── services/        # Business logic (Email, SMTP)
+│   ├── types/           # TypeScript type definitions
+│   └── utils/           # Database, logging, helpers
+├── prisma/              # Database schema and migrations
+├── docker-compose.yml   # Multi-container setup
+├── Dockerfile          # Container configuration
+└── deploy.sh           # Automated deployment script
 ```
 
-## Security Considerations
+## Deployment
 
-- Change default API key in production
-- Use environment variables for secrets
-- Enable HTTPS with SSL certificates
-- Configure firewall rules (allow ports 25, 80, 443)
-- Regular security updates
-- Monitor for abuse and implement rate limiting
+### VPS Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed VPS deployment instructions including:
+- Ubuntu 22.04 setup
+- Domain configuration
+- SSL certificate setup
+- Nginx reverse proxy
+- PM2 process management
+
+### Multiple VPS Setup
+
+See [MULTI_VPS_GUIDE.md](./MULTI_VPS_GUIDE.md) for deploying on subdomains or multiple servers.
+
+## Resource Requirements
+
+### Minimum (Small Scale)
+- **RAM:** 512MB
+- **Storage:** 1GB
+- **CPU:** 1 vCPU
+- **Network:** Basic bandwidth
+
+### Recommended (Medium Scale)
+- **RAM:** 1GB  
+- **Storage:** 5GB
+- **CPU:** 2 vCPU
+- **Network:** Moderate bandwidth
+
+## Security Features
+
+- **Rate Limiting** - Prevents abuse and spam
+- **CORS Protection** - Configurable allowed origins
+- **Helmet.js** - Security headers and CSP
+- **Input Validation** - Joi schema validation
+- **API Key Auth** - Secure admin endpoints
+- **Auto Cleanup** - Prevents data accumulation
+- **Non-root Container** - Secure Docker execution
+
+## Monitoring
+
+### Health Checks
+- HTTP: `GET /api/health`
+- Docker: Built-in healthcheck
+- PM2: Process monitoring
+
+### Logging
+- Structured JSON logs with Winston
+- Automatic log rotation (5MB, 5 files)
+- Separate error logs
+- Development console output
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Set up database
+npx prisma generate
+npx prisma db push
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Run tests
+npm test
+
+# Lint code
+npm run lint
+```
 
 ## Contributing
 
 1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Add tests (if applicable)
+5. Submit a pull request
 
 ## License
 
-MIT License - see LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+- **Issues:** [GitHub Issues](https://github.com/tacssuki/EphemeralMail/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/tacssuki/EphemeralMail/discussions)
+- **Frontend:** [EphemeralMail-Svelte](https://github.com/tacssuki/EphemeralMail-svelte)
+
+## Acknowledgments
+
+- Built with TypeScript, Express, and Prisma
+- Inspired by privacy-focused email solutions
+- Designed for simplicity and self-hosting
+
+---
+
+<div align="center">
+  <p>Made with ❤️ for privacy and simplicity</p>
+  <p>⭐ Star this repo if you find it useful!</p>
+</div>

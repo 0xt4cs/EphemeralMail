@@ -164,4 +164,23 @@ export class EmailController {
       sendError(res, 'Failed to check address availability', 500);
     }
   });
+
+  /**
+   * Get list of generated email addresses
+   */
+  getGeneratedAddresses = asyncHandler(async (req: Request, res: Response) => {
+    const { page = 1, limit = 50 } = req.query;
+
+    try {
+      const result = await this.emailService.getGeneratedAddresses(
+        parseInt(page as string),
+        parseInt(limit as string)
+      );
+
+      sendSuccess(res, result, 'Generated addresses retrieved successfully');
+    } catch (error) {
+      logger.error('Error getting generated addresses:', error);
+      sendError(res, 'Failed to retrieve generated addresses', 500);
+    }
+  });
 }

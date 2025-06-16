@@ -137,20 +137,31 @@ export class EmailService {
       throw new Error('Failed to delete email');
     }
   }
-
   /**
    * Delete all emails for an address
    */
   async deleteAllEmailsForAddress(address: string): Promise<number> {
     try {
-      const result = await prisma.email.deleteMany({
-        where: { to: address },
+      // Use a transaction to ensure both operations succeed or fail together
+      const result = await prisma.$transaction(async (tx) => {
+        // First, delete all emails for this address
+        const emailDeleteResult = await tx.email.deleteMany({
+          where: { to: address },
+        });
+
+        // Then, delete the email address itself
+        await tx.emailAddress.deleteMany({
+          where: { address: address },
+        });
+
+        return emailDeleteResult.count;
       });
 
-      return result.count;
+      logger.info(`Deleted ${result} emails and removed address: ${address}`);
+      return result;
     } catch (error) {
-      logger.error('Failed to delete emails:', error);
-      throw new Error('Failed to delete emails');
+      logger.error('Failed to delete emails and address:', error);
+      throw new Error('Failed to delete emails and address');
     }
   }
 
@@ -305,5 +316,49 @@ export class EmailService {
       attachments: dbEmail.attachments ? JSON.parse(dbEmail.attachments) : [],
       headers: dbEmail.headers ? JSON.parse(dbEmail.headers) : {},
     };
+  }  /**
+   * Get list of generated email addresses with pagination
+   */
+  async getGeneratedAddresses(page: number = 1, limit: number = 50) {
+    try {
+      const offset = (page - 1) * limit;
+
+      const [addresses, total] = await Promise.all([
+        prisma.emailAddress.findMany({
+          orderBy: { createdAt: 'desc' },
+          skip: offset,
+          take: limit,
+        }),
+        prisma.emailAddress.count(),
+      ]);
+
+      // Get email counts for each address
+      const addressesWithCounts = await Promise.all(
+        addresses.map(async (addr) => {
+          const emailCount = await prisma.email.count({
+            where: { to: addr.address }
+          });
+          
+          return {
+            address: addr.address,
+            domain: addr.domain,
+            localPart: addr.localPart,
+            createdAt: addr.createdAt,
+            emailCount
+          };
+        })
+      );
+
+      return {
+        addresses: addressesWithCounts,
+        total,
+        page,
+        limit,
+        hasMore: offset + addresses.length < total,
+      };
+    } catch (error) {
+      logger.error('Failed to get generated addresses:', error);
+      throw new Error('Failed to retrieve generated addresses');
+    }
   }
 }

@@ -29,6 +29,31 @@ router.post('/generate', validate(emailValidation.generateEmail), emailControlle
 
 /**
  * @swagger
+ * /api/emails/addresses:
+ *   get:
+ *     summary: Get list of generated email addresses
+ *     tags: [Emails]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Number of addresses per page
+ *     responses:
+ *       200:
+ *         description: List of generated email addresses
+ */
+router.get('/addresses', validate(emailValidation.getEmails, 'query'), emailController.getGeneratedAddresses);
+
+/**
+ * @swagger
  * /api/emails/{address}:
  *   get:
  *     summary: Get emails for a specific address
