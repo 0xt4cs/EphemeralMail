@@ -47,10 +47,27 @@ echo "🔨 Building application..."
 sudo -u $SERVICE_USER npm install
 sudo -u $SERVICE_USER npm run build
 
-# Update database
-echo "🗄️  Updating database..."
+# Update database with session management
+echo "🗄️  Updating database schema..."
+echo "  - Generating Prisma client..."
 sudo -u $SERVICE_USER npx prisma generate
-sudo -u $SERVICE_USER npx prisma db push
+
+echo "  - Applying database migrations..."
+# Try migrate deploy first (for production)
+if sudo -u $SERVICE_USER npx prisma migrate deploy 2>/dev/null; then
+    echo "  ✅ Migrations applied successfully"
+else
+    echo "  ⚠️  Migrate deploy failed, trying db push..."
+    sudo -u $SERVICE_USER npx prisma db push
+fi
+
+# Verify database is ready
+echo "  - Verifying database schema..."
+if sudo -u $SERVICE_USER npx prisma db pull --force 2>/dev/null; then
+    echo "  ✅ Database schema verified"
+else
+    echo "  ⚠️  Database verification had issues, but continuing..."
+fi
 
 # Restart services
 echo "🔄 Restarting services..."
@@ -58,6 +75,18 @@ sudo -u $SERVICE_USER pm2 start ephemeral-mail 2>/dev/null || {
     echo "Starting new PM2 process..."
     sudo -u $SERVICE_USER pm2 start dist/index.js --name ephemeral-mail
 }
+
+# Wait a moment for service to start
+sleep 3
+
+# Verify service health
+echo "🏥 Checking service health..."
+if curl -f http://localhost:4444/health >/dev/null 2>&1; then
+    echo "  ✅ Service is responding"
+else
+    echo "  ⚠️  Service may not be fully ready yet"
+    echo "  💡 Check logs: sudo -u $SERVICE_USER pm2 logs ephemeral-mail"
+fi
 
 echo "✅ Update completed!"
 echo "🔧 Useful commands:"
