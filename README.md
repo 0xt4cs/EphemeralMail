@@ -1,4 +1,4 @@
-# EphemeralMail - B- 🚀 **Lightweight & Fast** - Alpine-based Docker image (~50MB)
+# EphemeralMail API - 🚀 **Lightweight & Fast**
 - 🔒 **Privacy-Focused** - Auto-delete emails after 24 hours
 - 📧 **Built-in SMTP** - No external email server needed
 - 🛡️ **Secure by Default** - Rate limiting, validation, security headers
