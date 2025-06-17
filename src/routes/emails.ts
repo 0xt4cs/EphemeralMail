@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { EmailController } from '@/controllers/EmailController';
 import { emailValidation } from '@/middleware/validation';
 import { validate } from '@/middleware/validation-middleware';
+import { sessionMiddleware } from '@/middleware/session';
 
 const router = Router();
 const emailController = new EmailController();
@@ -25,7 +26,7 @@ const emailController = new EmailController();
  *       201:
  *         description: Email address generated successfully
  */
-router.post('/generate', validate(emailValidation.generateEmail), emailController.generateEmail);
+router.post('/generate', sessionMiddleware.requireSession, validate(emailValidation.generateEmail), emailController.generateEmail);
 
 /**
  * @swagger
@@ -50,7 +51,7 @@ router.post('/generate', validate(emailValidation.generateEmail), emailControlle
  *       200:
  *         description: List of generated email addresses
  */
-router.get('/addresses', validate(emailValidation.getEmails, 'query'), emailController.getGeneratedAddresses);
+router.get('/addresses', sessionMiddleware.requireSession, validate(emailValidation.getEmails, 'query'), emailController.getGeneratedAddresses);
 
 /**
  * @swagger
@@ -66,7 +67,7 @@ router.get('/addresses', validate(emailValidation.getEmails, 'query'), emailCont
  *           type: string
  *         description: Email address
  */
-router.get('/:address', validate(emailValidation.emailAddress, 'params'), emailController.getEmails);
+router.get('/:address', sessionMiddleware.requireSession, validate(emailValidation.emailAddress, 'params'), emailController.getEmails);
 
 /**
  * @swagger
@@ -75,7 +76,7 @@ router.get('/:address', validate(emailValidation.emailAddress, 'params'), emailC
  *     summary: Get unread email count for an address
  *     tags: [Emails]
  */
-router.get('/:address/unread-count', validate(emailValidation.emailAddress, 'params'), emailController.getUnreadCount);
+router.get('/:address/unread-count', sessionMiddleware.requireSession, validate(emailValidation.emailAddress, 'params'), emailController.getUnreadCount);
 
 /**
  * @swagger
@@ -84,7 +85,7 @@ router.get('/:address/unread-count', validate(emailValidation.emailAddress, 'par
  *     summary: Get email address information
  *     tags: [Emails]
  */
-router.get('/:address/info', validate(emailValidation.emailAddress, 'params'), emailController.getAddressInfo);
+router.get('/:address/info', sessionMiddleware.requireSession, validate(emailValidation.emailAddress, 'params'), emailController.getAddressInfo);
 
 /**
  * @swagger
@@ -111,7 +112,7 @@ router.delete('/:address', validate(emailValidation.emailAddress, 'params'), ema
  *     summary: Get a specific email by ID
  *     tags: [Emails]
  */
-router.get('/message/:id', validate(emailValidation.emailId, 'params'), emailController.getEmailById);
+router.get('/message/:id', sessionMiddleware.requireSession, validate(emailValidation.emailId, 'params'), emailController.getEmailById);
 
 /**
  * @swagger

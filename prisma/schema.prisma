@@ -35,6 +35,8 @@ model EmailAddress {
   address     String   @unique
   domain      String
   localPart   String
+  sessionId   String   // Associate with user session
+  fingerprint String   // Browser fingerprint for additional security
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   lastUsed    DateTime @default(now())
@@ -43,6 +45,8 @@ model EmailAddress {
   @@index([address])
   @@index([domain])
   @@index([createdAt])
+  @@index([sessionId])
+  @@index([fingerprint])
 }
 
 model BlacklistedDomain {
@@ -59,8 +63,27 @@ model ApiUsage {
   ip        String
   endpoint  String
   userAgent String?
+  sessionId String?
+  fingerprint String?
   timestamp DateTime @default(now())
 
   @@index([ip])
   @@index([timestamp])
+  @@index([sessionId])
+}
+
+model UserSession {
+  id          String   @id @default(cuid())
+  sessionId   String   @unique
+  fingerprint String
+  ipAddress   String
+  userAgent   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  lastUsed    DateTime @default(now())
+  expiresAt   DateTime
+
+  @@index([sessionId])
+  @@index([fingerprint])
+  @@index([createdAt])
 }

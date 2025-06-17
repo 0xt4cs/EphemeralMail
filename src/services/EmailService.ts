@@ -30,10 +30,8 @@ export class EmailService {
           headers: emailData.headers ? JSON.stringify(emailData.headers) : null,
           size: emailData.size || 0,
         },
-      });
-
-      // Update email address statistics
-      await this.updateEmailAddressStats(emailData.to);
+      });      // Update email address statistics (for incoming emails, we might not have session data)
+      await this.updateEmailAddressStats(emailData.to, 'incoming', 'incoming');
 
       logger.info(`Email created for ${emailData.to} from ${emailData.from}`);
       return this.transformEmailToMessage(email);
@@ -42,18 +40,27 @@ export class EmailService {
       throw new Error('Failed to create email');
     }
   }
-
   /**
-   * Get emails for a specific address with pagination
+   * Get emails for a specific address with session validation
    */
   async getEmailsForAddress(
     address: string,
     page: number = 1,
     limit: number = 20,
     unreadOnly: boolean = false,
-    search?: string
+    search?: string,
+    sessionId?: string,
+    fingerprint?: string
   ) {
     try {
+      // First verify the address belongs to this session
+      if (sessionId || fingerprint) {
+        const addressOwnership = await this.verifyAddressOwnership(address, sessionId, fingerprint);
+        if (!addressOwnership) {
+          throw new Error('Access denied: Address not owned by this session');
+        }
+      }
+
       const offset = (page - 1) * limit;
       
       const where: any = { to: address };
@@ -92,20 +99,89 @@ export class EmailService {
       throw new Error('Failed to retrieve emails');
     }
   }
-
   /**
-   * Get a specific email by ID
+   * Get a specific email by ID with session validation
    */
-  async getEmailById(id: string): Promise<EmailMessage | null> {
+  async getEmailById(
+    id: string, 
+    sessionId?: string, 
+    fingerprint?: string
+  ): Promise<EmailMessage | null> {
     try {
       const email = await prisma.email.findUnique({
         where: { id },
       });
 
-      return email ? this.transformEmailToMessage(email) : null;
+      if (!email) {
+        return null;
+      }
+
+      // Verify the email address belongs to this session
+      if (sessionId || fingerprint) {
+        const addressOwnership = await this.verifyAddressOwnership(email.to, sessionId, fingerprint);
+        if (!addressOwnership) {
+          throw new Error('Access denied: Email not owned by this session');
+        }
+      }
+
+      return this.transformEmailToMessage(email);
     } catch (error) {
       logger.error('Failed to get email by ID:', error);
       throw new Error('Failed to retrieve email');
+    }
+  }
+
+  /**
+   * Verify address ownership by session
+   */
+  async verifyAddressOwnership(
+    address: string, 
+    sessionId?: string, 
+    fingerprint?: string
+  ): Promise<boolean> {
+    try {
+      const emailAddress = await prisma.emailAddress.findUnique({
+        where: { address },
+      });
+
+      if (!emailAddress) {
+        return false;
+      }      // Check if address belongs to this session or fingerprint
+      const isOwner = Boolean(
+        (sessionId && emailAddress.sessionId === sessionId) ||
+        (fingerprint && emailAddress.fingerprint === fingerprint)
+      );
+
+      return isOwner;
+    } catch (error) {
+      logger.error('Failed to verify address ownership:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get all email addresses for a session
+   */
+  async getAddressesForSession(
+    sessionId: string, 
+    fingerprint: string
+  ): Promise<EmailAddress[]> {
+    try {
+      const addresses = await prisma.emailAddress.findMany({
+        where: {
+          OR: [
+            { sessionId },
+            { fingerprint },
+          ],
+          isActive: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      return addresses as EmailAddress[];
+    } catch (error) {
+      logger.error('Failed to get addresses for session:', error);
+      throw new Error('Failed to retrieve addresses');
     }
   }
 
@@ -164,11 +240,14 @@ export class EmailService {
       throw new Error('Failed to delete emails and address');
     }
   }
-
   /**
-   * Generate a new random email address
+   * Generate a new random email address with session association
    */
-  async generateEmailAddress(customPrefix?: string): Promise<EmailAddress> {
+  async generateEmailAddress(
+    customPrefix?: string, 
+    sessionId?: string, 
+    fingerprint?: string
+  ): Promise<EmailAddress> {
     try {
       let emailAddress: string;
       
@@ -188,7 +267,7 @@ export class EmailService {
           throw new Error('Email address already exists');
         }
         // Generate a new random one if no custom prefix
-        return this.generateEmailAddress();
+        return this.generateEmailAddress(undefined, sessionId, fingerprint);
       }
 
       const { localPart, domain } = parseEmailAddress(emailAddress);
@@ -198,6 +277,8 @@ export class EmailService {
           address: emailAddress,
           domain,
           localPart,
+          sessionId: sessionId || 'anonymous',
+          fingerprint: fingerprint || 'unknown',
         },
       });
 
@@ -223,11 +304,10 @@ export class EmailService {
       throw new Error('Failed to retrieve email address info');
     }
   }
-
   /**
    * Update email address statistics
    */
-  private async updateEmailAddressStats(address: string): Promise<void> {
+  private async updateEmailAddressStats(address: string, sessionId?: string, fingerprint?: string): Promise<void> {
     try {
       const { localPart, domain } = parseEmailAddress(address);
 
@@ -241,6 +321,8 @@ export class EmailService {
           address,
           domain,
           localPart,
+          sessionId: sessionId || 'unknown',
+          fingerprint: fingerprint || 'unknown',
           emailCount: 1,
         },
       });

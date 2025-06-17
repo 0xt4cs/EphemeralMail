@@ -9,15 +9,19 @@ export class EmailController {
   constructor() {
     this.emailService = new EmailService();
   }
-
   /**
    * Generate a new random email address
    */
   generateEmail = asyncHandler(async (req: Request, res: Response) => {
     const { customPrefix } = req.body;
+    const sessionData = req.sessionData;
 
     try {
-      const emailAddress = await this.emailService.generateEmailAddress(customPrefix);
+      const emailAddress = await this.emailService.generateEmailAddress(
+        customPrefix, 
+        sessionData?.sessionId, 
+        sessionData?.fingerprint
+      );
       
       sendSuccess(res, {
         address: emailAddress.address,
@@ -33,38 +37,46 @@ export class EmailController {
       sendError(res, 'Failed to generate email address', 500);
     }
   });
-
   /**
    * Get emails for a specific address
-   */
-  getEmails = asyncHandler(async (req: Request, res: Response) => {
+   */  getEmails = asyncHandler(async (req: Request, res: Response) => {
     const { address } = req.params;
-    const { page = 1, limit = 20, search, unreadOnly = false } = req.query;
+    const { page = 1, limit = 20, search, unreadOnly } = req.query;
+    const sessionData = req.sessionData;
 
     try {
       const result = await this.emailService.getEmailsForAddress(
         address,
         parseInt(page as string),
         parseInt(limit as string),
-        unreadOnly === 'true',
-        search as string
+        Boolean(unreadOnly === 'true'),
+        search as string,
+        sessionData?.sessionId,
+        sessionData?.fingerprint
       );
 
       sendSuccess(res, result, 'Emails retrieved successfully');
     } catch (error) {
       logger.error('Error getting emails:', error);
+      if (error instanceof Error && error.message.includes('Access denied')) {
+        return sendError(res, 'Access denied: You do not own this email address', 403);
+      }
       sendError(res, 'Failed to retrieve emails', 500);
     }
   });
-
   /**
    * Get a specific email by ID
    */
   getEmailById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
+    const sessionData = req.sessionData;
 
     try {
-      const email = await this.emailService.getEmailById(id);
+      const email = await this.emailService.getEmailById(
+        id, 
+        sessionData?.sessionId, 
+        sessionData?.fingerprint
+      );
       
       if (!email) {
         return sendError(res, 'Email not found', 404);
@@ -76,6 +88,9 @@ export class EmailController {
       sendSuccess(res, email, 'Email retrieved successfully');
     } catch (error) {
       logger.error('Error getting email by ID:', error);
+      if (error instanceof Error && error.message.includes('Access denied')) {
+        return sendError(res, 'Access denied: You do not own this email', 403);
+      }
       sendError(res, 'Failed to retrieve email', 500);
     }
   });
@@ -164,18 +179,36 @@ export class EmailController {
       sendError(res, 'Failed to check address availability', 500);
     }
   });
-
   /**
-   * Get list of generated email addresses
+   * Get list of generated email addresses for current session
    */
   getGeneratedAddresses = asyncHandler(async (req: Request, res: Response) => {
     const { page = 1, limit = 50 } = req.query;
+    const sessionData = req.sessionData;
 
     try {
-      const result = await this.emailService.getGeneratedAddresses(
-        parseInt(page as string),
-        parseInt(limit as string)
+      if (!sessionData?.sessionId || !sessionData?.fingerprint) {
+        return sendError(res, 'Session required', 401);
+      }
+
+      const addresses = await this.emailService.getAddressesForSession(
+        sessionData.sessionId,
+        sessionData.fingerprint
       );
+
+      // Apply pagination
+      const pageNum = parseInt(page as string);
+      const limitNum = parseInt(limit as string);
+      const offset = (pageNum - 1) * limitNum;
+      const paginatedAddresses = addresses.slice(offset, offset + limitNum);
+
+      const result = {
+        addresses: paginatedAddresses,
+        total: addresses.length,
+        page: pageNum,
+        limit: limitNum,
+        hasMore: offset + paginatedAddresses.length < addresses.length,
+      };
 
       sendSuccess(res, result, 'Generated addresses retrieved successfully');
     } catch (error) {

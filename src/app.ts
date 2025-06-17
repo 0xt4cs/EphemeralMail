@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 import { config } from '@/config';
 import { logger } from '@/utils/logger';
@@ -48,9 +49,7 @@ export class App {
       origin: config.security.allowedOrigins,
       credentials: true,
       optionsSuccessStatus: 200,
-    }));
-
-    // Body parsing middleware
+    }));    // Body parsing middleware
     this.app.use(express.json({ 
       limit: '10mb',
       verify: (req, res, buf) => {
@@ -59,6 +58,9 @@ export class App {
       }
     }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+    // Cookie parsing middleware
+    this.app.use(cookieParser());
 
     // Rate limiting
     this.app.use(rateLimiter);
