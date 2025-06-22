@@ -17,10 +17,31 @@ export const emailValidation = {
   emailAddress: Joi.object({
     address: Joi.string().pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+$/).required(),
   }),
-
   // Validate email ID parameter
   emailId: Joi.object({
     id: Joi.string().required(),
+  }),
+
+  // Validate manual email creation
+  manualEmail: Joi.object({
+    prefix: Joi.string()
+      .pattern(/^[a-zA-Z0-9._+-]+$/)
+      .min(1)
+      .max(64)
+      .custom((value, helpers) => {
+        // Check for consecutive dots or dots at start/end
+        if (value.includes('..') || value.startsWith('.') || value.endsWith('.')) {
+          return helpers.error('string.format');
+        }
+        return value;
+      })
+      .required()
+      .messages({
+        'string.pattern.base': 'Prefix can only contain letters, numbers, dots (.), hyphens (-), underscores (_), and plus signs (+)',
+        'string.format': 'Prefix cannot have consecutive dots or start/end with dots',
+        'string.min': 'Prefix must be at least 1 character long',
+        'string.max': 'Prefix cannot exceed 64 characters'
+      }),
   }),
 };
 

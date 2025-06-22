@@ -123,4 +123,27 @@ router.get('/message/:id', sessionMiddleware.requireSession, validate(emailValid
  */
 router.delete('/message/:id', validate(emailValidation.emailId, 'params'), emailController.deleteEmail);
 
+/**
+ * @swagger
+ * /api/emails/manual:
+ *   post:
+ *     summary: Create a manual email address with custom prefix
+ *     tags: [Emails]
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - prefix
+ *             properties:
+ *               prefix:
+ *                 type: string
+ *                 description: Custom prefix for the email address
+ *     responses:
+ *       201:
+ *         description: Manual email address created successfully
+ */
+router.post('/manual', sessionMiddleware.requireSession, validate(emailValidation.manualEmail), emailController.createManualEmail);
+
 export default router;

@@ -18,11 +18,29 @@ export function parseEmailAddress(email: string): { localPart: string; domain: s
 }
 
 /**
- * Validate email address format
+ * Validate email address format (RFC 5322 compliant)
  */
 export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  // Basic format check
+  if (!email || typeof email !== 'string') return false;
+  
+  const parts = email.split('@');
+  if (parts.length !== 2) return false;
+  
+  const [localPart, domain] = parts;
+  
+  // Local part validation
+  if (!localPart || localPart.length < 1 || localPart.length > 64) return false;
+  if (!/^[a-zA-Z0-9._+-]+$/.test(localPart)) return false;
+  if (localPart.includes('..') || localPart.startsWith('.') || localPart.endsWith('.')) return false;
+  
+  // Domain validation (basic)
+  if (!domain || domain.length < 1 || domain.length > 253) return false;
+  if (!/^[a-zA-Z0-9.-]+$/.test(domain)) return false;
+  if (domain.includes('..') || domain.startsWith('.') || domain.endsWith('.')) return false;
+  if (domain.startsWith('-') || domain.endsWith('-')) return false;
+  
+  return true;
 }
 
 /**

@@ -255,16 +255,24 @@ export class EmailService {
         emailAddress = `${customPrefix}@${config.email.domain}`;
       } else {
         emailAddress = generateRandomEmail();
-      }
-
-      // Check if address already exists
+      }      // Check if address already exists
       const existing = await prisma.emailAddress.findUnique({
         where: { address: emailAddress },
       });
 
       if (existing) {
         if (customPrefix) {
-          throw new Error('Email address already exists');
+          // For manually input emails, allow access to existing emails regardless of original owner
+          // Update the session/fingerprint to current user for access
+          const updatedEmailAddr = await prisma.emailAddress.update({
+            where: { address: emailAddress },
+            data: {
+              sessionId: sessionId || existing.sessionId,
+              fingerprint: fingerprint || existing.fingerprint,
+              // Don't update createdAt - preserve original creation time
+            },
+          });
+          return updatedEmailAddr as EmailAddress;
         }
         // Generate a new random one if no custom prefix
         return this.generateEmailAddress(undefined, sessionId, fingerprint);
@@ -439,8 +447,74 @@ export class EmailService {
         hasMore: offset + addresses.length < total,
       };
     } catch (error) {
-      logger.error('Failed to get generated addresses:', error);
-      throw new Error('Failed to retrieve generated addresses');
+      logger.error('Failed to get generated addresses:', error);      throw new Error('Failed to retrieve generated addresses');
+    }
+  }
+
+  /**
+   * Create manual email address with given prefix
+   */
+  async createManualEmail(prefix: string, sessionId?: string, fingerprint?: string) {
+    try {
+      // Create the full email address using the configured domain
+      const emailAddress = `${prefix}@${config.email.domain}`;
+      
+      // Check if email address already exists
+      const existingAddress = await prisma.emailAddress.findUnique({
+        where: { address: emailAddress }
+      });
+
+      if (existingAddress) {
+        // Email exists - update session/fingerprint to allow current user access
+        await prisma.emailAddress.update({
+          where: { address: emailAddress },
+          data: {
+            sessionId: sessionId || existingAddress.sessionId,
+            fingerprint: fingerprint || existingAddress.fingerprint,
+          }
+        });
+
+        // Get email count for existing address
+        const emailCount = await prisma.email.count({
+          where: { to: emailAddress }
+        });
+
+        logger.info(`Manual email access granted for existing address: ${emailAddress}`);
+        
+        return {
+          address: emailAddress,
+          domain: config.email.domain,
+          localPart: prefix,
+          createdAt: existingAddress.createdAt,
+          emailCount,
+          isExisting: true
+        };
+      } else {
+        // Create new email address
+        const newAddress = await prisma.emailAddress.create({
+          data: {
+            address: emailAddress,
+            domain: config.email.domain,
+            localPart: prefix,
+            sessionId: sessionId || 'manual',
+            fingerprint: fingerprint || 'manual',
+          }
+        });
+
+        logger.info(`Manual email address created: ${emailAddress}`);
+        
+        return {
+          address: newAddress.address,
+          domain: newAddress.domain,
+          localPart: newAddress.localPart,
+          createdAt: newAddress.createdAt,
+          emailCount: 0,
+          isExisting: false
+        };
+      }
+    } catch (error) {
+      logger.error('Failed to create manual email:', error);
+      throw new Error('Failed to create manual email address');
     }
   }
 }

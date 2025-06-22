@@ -208,12 +208,50 @@ export class EmailController {
         page: pageNum,
         limit: limitNum,
         hasMore: offset + paginatedAddresses.length < addresses.length,
-      };
-
-      sendSuccess(res, result, 'Generated addresses retrieved successfully');
+      };      sendSuccess(res, result, 'Generated addresses retrieved successfully');
     } catch (error) {
       logger.error('Error getting generated addresses:', error);
       sendError(res, 'Failed to retrieve generated addresses', 500);
+    }
+  });
+
+  /**
+   * Create manual email with custom prefix
+   */
+  createManualEmail = asyncHandler(async (req: Request, res: Response) => {
+    const { prefix } = req.body;
+    const sessionData = req.sessionData;
+
+    try {
+      if (!prefix || typeof prefix !== 'string' || !prefix.trim()) {
+        return sendError(res, 'Email prefix is required', 400);
+      }      const cleanPrefix = prefix.trim().toLowerCase();
+      
+      // Validate prefix format - RFC 5322 compliant local part
+      if (!/^[a-zA-Z0-9._+-]+$/.test(cleanPrefix)) {
+        return sendError(res, 'Invalid prefix format. Only letters, numbers, dots (.), hyphens (-), underscores (_), and plus signs (+) are allowed. Spaces and other special characters are not permitted.', 400);
+      }
+
+      // Additional validation for prefix length and structure
+      if (cleanPrefix.length < 1 || cleanPrefix.length > 64) {
+        return sendError(res, 'Prefix must be between 1 and 64 characters long.', 400);
+      }
+
+      // Check for consecutive dots or dots at start/end
+      if (cleanPrefix.includes('..') || cleanPrefix.startsWith('.') || cleanPrefix.endsWith('.')) {
+        return sendError(res, 'Prefix cannot have consecutive dots or start/end with dots.', 400);
+      }
+
+      const result = await this.emailService.createManualEmail(
+        cleanPrefix,
+        sessionData?.sessionId,
+        sessionData?.fingerprint
+      );
+      
+      sendSuccess(res, result, 'Manual email created successfully', 201);
+    } catch (error) {
+      logger.error('Error creating manual email:', error);
+      sendError(res, 'Failed to create manual email', 500);
     }
   });
 }
