@@ -856,7 +856,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ---
 
 <div align="center">
-  <p><strong>Made with ❤️ for privacy and simplicity</strong></p>
   <p>⭐ Star this repo if you find it useful!</p>
   <p>🔗 <a href="https://github.com/tacssuki/EphemeralMail-svelte">Optional Frontend</a> | <a href="https://github.com/tacssuki/EphemeralMail/issues">Report Issues</a> | <a href="https://github.com/tacssuki/EphemeralMail/discussions">Discussions</a></p>
 </div>
